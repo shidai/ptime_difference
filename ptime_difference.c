@@ -13,7 +13,8 @@ int main (int argc, char *argv[])
 	char tname[128];   // name of template
 	//char oname[128];   // name of output .tim
 	int mode = 0; // Default: without templates; to distinguish different type of templates
-	double frac_on;
+	int align = 1;  // Default: don't align profiles
+	double frac_off;
 
 	int nchn_start, nchn_end;
 
@@ -25,7 +26,7 @@ int main (int argc, char *argv[])
 		{
             index = i + 1;
 			n = 0;
-			while ( (index + n) < argc && strcmp(argv[index+n],"-std") != 0 && strcmp(argv[index+n],"-pt") != 0 && strcmp(argv[index+n],"-frac_on") != 0 && strcmp(argv[index+n],"-nchn_start") != 0 && strcmp(argv[index+n],"-nchn_end") != 0)
+			while ( (index + n) < argc && strcmp(argv[index+n],"-std") != 0 && strcmp(argv[index+n],"-pt") != 0 && strcmp(argv[index+n],"-frac_off") != 0 && strcmp(argv[index+n],"-nchn_start") != 0 && strcmp(argv[index+n],"-nchn_end") != 0 && strcmp(argv[index+n],"-align") != 0)
 			//while ( (index + n) < argc && strcmp(argv[index+n],"-std") != 0 && strcmp(argv[index+n],"-pt") != 0 && strcmp(argv[index+n],"-o") != 0 && strcmp(argv[index+n],"-sim") != 0 && strcmp(argv[index+n],"-frac_on") != 0 && strcmp(argv[index+n],"-frac_off") != 0)
 			{
 				n++;
@@ -46,9 +47,9 @@ int main (int argc, char *argv[])
 			mode = 2; // ptime template
 			printf ("ptime template format\n");
 		}
-		else if (strcmp(argv[i],"-frac_on") == 0)
+		else if (strcmp(argv[i],"-frac_off") == 0)
 		{
-			frac_on = atof(argv[++i]);
+			frac_off = atof(argv[++i]);
 		}
 		else if (strcmp(argv[i],"-nchn_start") == 0)
 		{
@@ -59,15 +60,21 @@ int main (int argc, char *argv[])
 			nchn_end = atof(argv[++i]);
 			//printf ("%lf\n", frac_off);
 		}
+		else if (strcmp(argv[i],"-align") == 0)
+		{
+			align = 0;
+		}
 		else 
 		{
 			printf ("Wrong options!!!\n");
-			printf ("Usage: ptime_difference.out -f fname (-std tname; -pt tname) -nchn_start num1 -nchn_end num2\n"
+			printf ("Usage: ptime_difference.out -f fname (-std tname; -pt tname) -nchn_start num1 -nchn_end num2 -frac_off off\n"
 					"       Calculate the differences between profiles.\n"
 					"       -f fname: data file;\n" 
-					"       tname: templates;\n" 
+					"       (tname): templates;\n" 
 					"       -std: standard template format;\n" 
 					"       -pt: ptime template;\n"
+					"       -frac_off: off pulse fraction;\n"
+					"       (-align): align profiles;\n"
 					"       -nchn_start: the first channel used;\n"
 					"       -nchn_end: the last channel used;\n"); 
 			exit (0);
@@ -87,24 +94,38 @@ int main (int argc, char *argv[])
     //fprintf (fp, "S0    S    err\n");
 	/////////////////////////////////////////////////////////
 	
-	if (mode == 0)
+	if (align == 1)
 	{
+		// don't align the profiles
 		int k;
 		for (k = index; k < index + n; k++)
 		{
 			// get the data file name
 			strcpy(fname,argv[k]);
-			basic(fname, nchn_start, nchn_end, frac_on);
+			simple(fname, nchn_start, nchn_end, frac_off);
 		}
 	}
-	else if (mode == 1 || mode == 2)
+	else 
 	{
-		int k;
-		for (k = index; k < index + n; k++)
+		if (mode == 0)
 		{
-			// get the data file name
-			strcpy(fname,argv[k]);
-			advanced(fname, tname, mode, nchn_start, nchn_end, frac_on);
+			int k;
+			for (k = index; k < index + n; k++)
+			{
+				// get the data file name
+				strcpy(fname,argv[k]);
+				basic(fname, nchn_start, nchn_end, frac_off);
+			}
+		}
+		else if (mode == 1 || mode == 2)
+		{
+			int k;
+			for (k = index; k < index + n; k++)
+			{
+				// get the data file name
+				strcpy(fname,argv[k]);
+				advanced(fname, tname, mode, nchn_start, nchn_end, frac_off);
+			}
 		}
 	}
 

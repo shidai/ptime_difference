@@ -397,7 +397,114 @@ int diff_prof_std (double *s, double *p, double psrfreq, int nphase, int nchan, 
 	{
 		//fprintf (fp, "%.3lf %.3lf\n", p_new[i]+a, p[i]);
 		//fprintf (fp, "%.3lf %.3lf %.3lf %.3lf\n", p_new[i]-s[i], p[i], p_new[i], s[i]);
-		fprintf (fp, "%.3lf\n", p_new[i]-s[i]);
+		fprintf (fp, "%.3lf %.3lf\n", s[i], p_new[i]-s[i]);
+	}
+
+    if (fclose (fp) != 0)
+		fprintf (stderr, "Error closing\n");
+
+	return 0;
+}
+
+int diff_prof_simple (double *s, double *p, int nphase, int nchan, int npol, int nsub, char *fname)
+// calculate the differences between profiles without alignning 
+{
+    //int nphase=1024;
+    int nchn=1;
+
+	// dft profile and template
+	
+	//nchn = n/nphase;
+	//printf ("%d\n", nchn);
+	int k;  // k=nphase/2
+
+	double real_p[NP], ima_p[NP];
+	double amp_s[nchn][NP],amp_p[nchn][NP];  // elements for calculating A7
+	double phi_s[nchn][NP],phi_p[nchn][NP];  // the second dim should be NP, which is large enough for different observations
+
+	preA7(&k, amp_s, amp_p, phi_s, phi_p, s, p, nphase, nchn, real_p, ima_p);
+	//printf ("%d\n", nchn);
+	
+	// initial guess of the phase
+    int peak_s, peak_p;	
+
+	find_peak(nphase,s,&peak_s);
+	find_peak(nphase,p,&peak_p);
+
+	int d;
+	double step;
+	double ini_phase,up_phase,low_phase;
+
+	d=peak_p-peak_s;
+	step=2.0*3.1415926/(10.0*nphase);
+	//step=2.0*3.1415926/10240.0;
+
+	if (d>=nphase/2)
+	{
+		ini_phase=2.0*3.1415926*(nphase-1-d)/nphase;
+		//ini_phase=2.0*3.1415926*(1023-d)/1024.0;
+		up_phase=ini_phase+step;
+		low_phase=ini_phase-step;
+		while (A7(up_phase, amp_s, amp_p, phi_s, phi_p, k, nchn)*A7(low_phase, amp_s, amp_p, phi_s, phi_p, k, nchn)>0.0)
+		{
+		    up_phase+=step;
+		    low_phase-=step;
+		}
+	}
+	else
+	{
+		ini_phase=-2.0*3.1415926*d/nphase;
+		//ini_phase=-2.0*3.1415926*d/1024.0;
+		up_phase=ini_phase+step;
+		low_phase=ini_phase-step;
+		while (A7(up_phase, amp_s, amp_p, phi_s, phi_p, k, nchn)*A7(low_phase, amp_s, amp_p, phi_s, phi_p, k, nchn)>0.0)
+		{
+		    up_phase+=step;
+		    low_phase-=step;
+		}
+	}
+
+    // calculate phase shift, a and b
+    double phase,b;
+    phase=zbrent(A7, low_phase, up_phase, 1.0e-16, amp_s, amp_p, phi_s, phi_p, k, nchn);
+    //phase=zbrent(A7, -1.0, 1.0, 1.0e-16);
+    //phase=zbrent(A7, -0.005, 0.005, 1.0e-16);
+    b=A9(phase, amp_s, amp_p, phi_s, phi_p, k, nchn);
+
+	// open file to write toa 
+	char head[] = "Diff_";
+	char channel[] = "_nchn_";
+	char pol[] = "_npol_";
+	char sub[] = "_nsub_";
+	char c1[10], c2[10], c3[10]; 
+
+	char output[100];
+
+	sprintf (c1, "%d", nsub);
+	sprintf (c2, "%d", nchan);
+	sprintf (c3, "%d", npol);
+
+	strcpy(output, head);
+	strcat(output, fname);
+	strcat(output, sub);
+	strcat(output, c1);
+	strcat(output, channel);
+	strcat(output, c2);
+	strcat(output, pol);
+	strcat(output, c3);
+
+	FILE *fp;
+	if ((fp = fopen(output, "w+")) == NULL)
+	{
+        fprintf (stdout, "Can't open file\n");
+		exit(1);
+	}
+
+	int i;
+	for (i = 0; i < nphase; i++)
+	{
+		//fprintf (fp, "%.3lf %.3lf %.3lf\n", s[i], p[i]/b, p[i]/b-s[i]);
+		fprintf (fp, "%.3lf %.3lf\n", s[i], p[i]/b-s[i]);
 	}
 
     if (fclose (fp) != 0)

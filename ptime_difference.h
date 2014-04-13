@@ -36,15 +36,21 @@ double find_peak_value (int n, double *s);
 
 int on_pulse (int nphase, int peak_position, double *in, double *out, double frac);
 
-int off_pulse (int nphase, int peak_position, double *in, double *out, double frac_off, double frac_on);
+int def_off_pulse (int nphase, double *in, double frac_off);
 
-int remove_baseline (double *in, double frac_off, double frac_on, int n, double *out);
+int off_pulse (int nphase, int index, double *in, double *out, double frac_off);
 
-int pre_diff (double *s, double *p, int nphase, double frac_on, double *s_out, double *p_out);
+int remove_baseline (double *in, int index, double frac_off, int n, double *out);
 
-int basic (char *fname, int nchn_start, int nchn_end, double frac_on);
+int pre_diff (double *s, int nphase, double frac_off, double *s_out);
 
-int advanced (char *fname, char *tname, int mode, int nchn_start, int nchn_end, double frac_on);
+int diff_prof_simple (double *s, double *p, int nphase, int nchan, int npol, int nsub, char *fname);
+
+int simple (char *fname, int nchn_start, int nchn_end, double frac_off);
+
+int basic (char *fname, int nchn_start, int nchn_end, double frac_off);
+
+int advanced (char *fname, char *tname, int mode, int nchn_start, int nchn_end, double frac_off);
 
 /////////////////////////////////////////////////////////////////
 //
