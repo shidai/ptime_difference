@@ -305,7 +305,8 @@ int diff_prof_std (double *s, double *p, double psrfreq, int nphase, int nchan, 
 	double step;
 	double ini_phase,up_phase,low_phase;
 
-	d=peak_p-peak_s;
+	d=corr (s,p,nphase);
+	//d=peak_p-peak_s;
 	step=2.0*3.1415926/(10.0*nphase);
 	//step=2.0*3.1415926/10240.0;
 
@@ -334,6 +335,7 @@ int diff_prof_std (double *s, double *p, double psrfreq, int nphase, int nchan, 
 		}
 	}
 
+	//printf ("%d %lf %lf %lf\n", d, ini_phase, low_phase, up_phase);
     // calculate phase shift, a and b
     double phase,b;
     phase=zbrent(A7, low_phase, up_phase, 1.0e-16, amp_s, amp_p, phi_s, phi_p, k, nchn);
@@ -350,8 +352,8 @@ int diff_prof_std (double *s, double *p, double psrfreq, int nphase, int nchan, 
 	printf ("phase shift: %.10lf\n", phase);  // microseconds
 	printf ("b: %lf\n", b);  // microseconds
 	printf ("a: %lf\n", a);  // microseconds
-	printf ("amp_p[0]: %lf\n", amp_p[0][0]);  // microseconds
-	printf ("amp_s[0]: %lf\n", amp_s[0][0]);  // microseconds
+	//printf ("amp_p[0]: %lf\n", amp_p[0][0]);  // microseconds
+	//printf ("amp_s[0]: %lf\n", amp_s[0][0]);  // microseconds
 	//printf ("%.10lf %.10lf\n", ((phase/3.1415926)*4.569651/2.0)*1.0e+3, ((errphase/3.1415926)*4.569651/2.0)*1.0e+3);  // microseconds
 	//printf ("errphase %.10lf \n", ((errphase/3.1415926)*5.75/2.0)*1.0e+6);
 	//printf ("errb %.10lf \n", errb);
@@ -435,7 +437,9 @@ int diff_prof_simple (double *s, double *p, int nphase, int nchan, int npol, int
 	double step;
 	double ini_phase,up_phase,low_phase;
 
-	d=peak_p-peak_s;
+	d=corr (s,p,nphase);
+	//d=peak_p-peak_s;
+	//d=0;
 	step=2.0*3.1415926/(10.0*nphase);
 	//step=2.0*3.1415926/10240.0;
 
@@ -464,12 +468,14 @@ int diff_prof_simple (double *s, double *p, int nphase, int nchan, int npol, int
 		}
 	}
 
+	//printf ("%d %lf %lf %lf\n", d, ini_phase, low_phase, up_phase);
     // calculate phase shift, a and b
     double phase,b;
     phase=zbrent(A7, low_phase, up_phase, 1.0e-16, amp_s, amp_p, phi_s, phi_p, k, nchn);
     //phase=zbrent(A7, -1.0, 1.0, 1.0e-16);
     //phase=zbrent(A7, -0.005, 0.005, 1.0e-16);
     b=A9(phase, amp_s, amp_p, phi_s, phi_p, k, nchn);
+	//printf ("%lf %lf\n", phase, b);
 
 	// open file to write toa 
 	char head[] = "Diff_";

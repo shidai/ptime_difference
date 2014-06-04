@@ -34,6 +34,8 @@ int find_peak (int n, double *s, int *position);
 
 double find_peak_value (int n, double *s);
 
+int corr (double *s, double *p, int nphase);
+
 int on_pulse (int nphase, int peak_position, double *in, double *out, double frac);
 
 int def_off_pulse (int nphase, double *in, double frac_off);
